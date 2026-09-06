@@ -1,0 +1,43 @@
+{
+  "daemon": {
+    "poll_interval_seconds": 5,
+    "log_file": "/var/log/syshealthd.log",
+    "fallback_log_file": "syshealthd.log",
+    "log_level": "INFO",
+    "pid_file": "/run/syshealthd.pid",
+    "fallback_pid_file": "/tmp/syshealthd.pid"
+  },
+  "thresholds": {
+    "cpu": {
+      "load_avg_warning_per_core": 1.5,
+      "load_avg_critical_per_core": 3.0,
+      "utilization_warning_pct": 80.0,
+      "utilization_critical_pct": 92.0
+    },
+    "memory": {
+      "ram_warning_pct": 80.0,
+      "ram_critical_pct": 90.0,
+      "swap_warning_pct": 50.0,
+      "swap_critical_pct": 75.0,
+      "leak_detection": {
+        "enabled": true,
+        "sample_window_size": 6,
+        "consecutive_growth_threshold": 4,
+        "min_growth_mb": 15.0,
+        "track_top_n_processes": 15
+      }
+    },
+    "disk": {
+      "capacity_warning_pct": 80.0,
+      "capacity_critical_pct": 90.0,
+      "inode_warning_pct": 85.0,
+      "inode_critical_pct": 95.0,
+      "monitored_mountpoints": ["/"]
+    }
+  },
+  "notifications": {
+    "syslog_enabled": true,
+    "stdout_enabled": true,
+    "json_log_enabled": true
+  }
+}

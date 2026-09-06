@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Linux Server Administration & Network Diagnostic Suite - Unified CLI
+# ==============================================================================
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+
+log_title() {
+    echo -e "\033[1;36m$1\033[0m"
+}
+
+log_error() {
+    echo -e "\033[0;31m[ERROR]\033[0m $1" >&2
+}
+
+show_banner() {
+    cat << "EOF"
+========================================================================
+     __   _                  ___       __          _        _____       _ _       
+    / /  (_)__  __ _____ __ / _ | ____/ /_ _  ____(_)__    / __/_ _____(_) /____  
+   / /__/ / _ \/ // /\ \ // __ |/ _  /  ' \/ // / / _ \  _\ \/ // / __/ / __/ -_) 
+  /____/_/_//_/\_,_//_\_\/_/ |_|\_,_/_/_/_/\_,_/_/_//_/ /___/\_,_/\__/_/\__/\__/  
+                     Server Administration & Diagnostic Suite                       
+========================================================================
+EOF
+}
+
+show_help() {
+    show_banner
+    echo "Usage: sys-admin-suite <command> [options]"
+    echo ""
+    echo "Available Commands:"
+    echo "  status               Show one-shot system health summary (CPU, RAM, Leaks, Disk)"
+    echo "  monitor              Stream live system health telemetry in the foreground"
+    echo "  netdiag [args]       Run network diagnostic suite (latency probe, iperf3, sockets)"
+    echo "  sockets              Inspect active TCP socket states and detect socket leaks"
+    echo "  backup [subcmd]      Manage automated backups (backup, verify, list, prune, install-cron)"
+    echo "  watchdog             Run service health watchdog and auto-recovery sweep"
+    echo "  provision [step]     Run server provisioning (network, ufw, ssh, all)"
+    echo "  version              Display suite version information"
+    echo ""
+    echo "Examples:"
+    echo "  sys-admin-suite status"
+    echo "  sys-admin-suite netdiag --target 192.168.56.10 --tcp --udp"
+    echo "  sys-admin-suite sockets"
+    echo "  sys-admin-suite backup backup"
+    echo "  sys-admin-suite backup verify"
+    echo "  sys-admin-suite watchdog"
+    echo ""
+}
+
+cmd_status() {
+    "$PYTHON_BIN" "${SCRIPT_DIR}/daemon/syshealthd.py" --once
+}
+
+cmd_monitor() {
+    "$PYTHON_BIN" "${SCRIPT_DIR}/daemon/syshealthd.py" --foreground
+}
+
+cmd_netdiag() {
+    "$PYTHON_BIN" "${SCRIPT_DIR}/diagnostics/netdiag.py" "$@"
+}
+
+cmd_sockets() {
+    "$PYTHON_BIN" "${SCRIPT_DIR}/diagnostics/netdiag.py" --sockets
+}
+
+cmd_backup() {
+    bash "${SCRIPT_DIR}/reliability/backup_manager.sh" "$@"
+}
+
+cmd_watchdog() {
+    bash "${SCRIPT_DIR}/reliability/service_watchdog.sh" "$@"
+}
+
+cmd_provision() {
+    local step="${1:-all}"
+    case "$step" in
+        network)
+            bash "${SCRIPT_DIR}/provisioning/scripts/setup_network.sh"
+            ;;
+        ufw)
+            bash "${SCRIPT_DIR}/provisioning/scripts/setup_ufw.sh"
+            ;;
+        ssh)
+            bash "${SCRIPT_DIR}/provisioning/scripts/harden_ssh.sh"
+            ;;
+        all)
+            bash "${SCRIPT_DIR}/provisioning/scripts/setup_network.sh"
+            bash "${SCRIPT_DIR}/provisioning/scripts/setup_ufw.sh"
+            bash "${SCRIPT_DIR}/provisioning/scripts/harden_ssh.sh"
+            ;;
+        *)
+            log_error "Unknown provisioning step: $step (Choose: network, ufw, ssh, all)"
+            exit 1
+            ;;
+    esac
+}
+
+main() {
+    if [ $# -eq 0 ]; then
+        show_help
+        exit 0
+    fi
+
+    local subcmd="$1"
+    shift
+
+    case "$subcmd" in
+        status)
+            cmd_status "$@"
+            ;;
+        monitor)
+            cmd_monitor "$@"
+            ;;
+        netdiag)
+            cmd_netdiag "$@"
+            ;;
+        sockets)
+            cmd_sockets "$@"
+            ;;
+        backup)
+            cmd_backup "$@"
+            ;;
+        watchdog)
+            cmd_watchdog "$@"
+            ;;
+        provision)
+            cmd_provision "$@"
+            ;;
+        version|--version|-v)
+            echo "Linux Server Administration & Network Diagnostic Suite v1.0.0 (2026)"
+            ;;
+        help|--help|-h)
+            show_help
+            ;;
+        *)
+            log_error "Unknown command: $subcmd"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

@@ -1,0 +1,15 @@
+# ==============================================================================
+# Linux Server Administration & Diagnostic Suite - Cron Maintenance Schedule
+# Place in /etc/cron.d/sys-maintenance or append to system crontab.
+# ==============================================================================
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# 1. Automated System & Telemetry Backups: Daily at 02:00 UTC
+0 2 * * * root /usr/local/bin/backup_manager.sh backup >> /var/log/sysbackup.log 2>&1
+
+# 2. Automated Service Watchdog & Process Recovery: Every 5 minutes
+*/5 * * * * root /usr/local/bin/service_watchdog.sh >> /var/log/syswatchdog.log 2>&1
+
+# 3. Network & System Diagnostic Status Snapshot: Every 30 minutes
+*/30 * * * * root /usr/local/bin/syshealthd --once >> /var/log/syshealth_summary.log 2>&1

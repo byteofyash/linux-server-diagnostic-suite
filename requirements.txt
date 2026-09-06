@@ -1,0 +1,7 @@
+# Core Suite Dependencies:
+# Zero mandatory external runtime dependencies!
+# The entire suite runs on Python 3 standard library and native Linux utilities.
+
+# Development & Testing (Optional):
+pytest>=7.4.0
+flake8>=6.0.0

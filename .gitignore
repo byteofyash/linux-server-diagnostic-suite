@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Vagrant and VirtualBox
+.vagrant/
+*.box
+*.vdi
+*.vmdk
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+tests/.tmp_test_run/
+test_backups/
+
+# Logs and Runtime State
+*.log
+*.pid
+syswatchdog_incidents.log
+syshealthd.log
+sysbackup*.tar.gz
+sysbackup*.sha256
+
+# OS Generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local AI Maintenance Docs (kept locally, not committed to public GitHub)
+ChangeLog.md
+Decisions.md
+Flow.md

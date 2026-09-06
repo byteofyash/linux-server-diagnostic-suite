@@ -1,0 +1,22 @@
+# ==============================================================================
+# Linux Server Administration & Diagnostic Suite - Logrotate Routine
+# Place in /etc/logrotate.d/syshealthd
+# ==============================================================================
+/var/log/syshealthd.log /var/log/syswatchdog*.log /var/log/sysbackup*.log {
+    daily
+    missingok
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 root adm
+    sharedscripts
+    postrotate
+        # Reload daemon to release old file handle
+        if [ -f /run/syshealthd.pid ]; then
+            kill -HUP $(cat /run/syshealthd.pid) 2>/dev/null || true
+        elif systemctl is-active --quiet syshealthd 2>/dev/null; then
+            systemctl reload syshealthd 2>/dev/null || true
+        fi
+    endscript
+}

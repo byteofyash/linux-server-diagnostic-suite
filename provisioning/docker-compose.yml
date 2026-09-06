@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # Target Headless Ubuntu Server
+  server-node:
+    build:
+      context: ..
+      dockerfile: provisioning/Dockerfile
+    container_name: srv-diagnostics-node1
+    hostname: srv-diagnostics-node1
+    privileged: true
+    cgroup: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - ..:/opt/linux-server-diagnostic-suite:rw
+    networks:
+      diagnostic-net:
+        ipv4_address: 192.168.56.10
+    ports:
+      - "2222:22"
+      - "5201:5201"
+      - "9100:9100"
+    restart: unless-stopped
+
+  # Host / Client benchmarking node to simulate host-to-guest diagnostics
+  client-node:
+    build:
+      context: ..
+      dockerfile: provisioning/Dockerfile
+    container_name: client-benchmarker
+    hostname: client-benchmarker
+    privileged: true
+    volumes:
+      - ..:/opt/linux-server-diagnostic-suite:rw
+    networks:
+      diagnostic-net:
+        ipv4_address: 192.168.56.20
+    depends_on:
+      - server-node
+    command: ["sleep", "infinity"]
+
+networks:
+  diagnostic-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.56.0/24
+          gateway: 192.168.56.1

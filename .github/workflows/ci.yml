@@ -1,0 +1,56 @@
+name: CI Diagnostic & Test Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-suite:
+    name: Build, Lint & Automated Test Matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install System Dependencies & Diagnostic Utilities
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            iperf3 iproute2 net-tools ufw procps cron logrotate shellcheck
+
+      - name: Lint Shell Scripts (ShellCheck)
+        run: |
+          echo "Running ShellCheck on bash scripts..."
+          shellcheck -S warning \
+            bin/sys-admin-suite \
+            install.sh \
+            uninstall.sh \
+            reliability/*.sh \
+            provisioning/scripts/*.sh
+
+      - name: Run Python Unit Test Suite
+        run: |
+          python3 -m unittest discover -s tests -v
+
+      - name: Run Shell Integration Tests
+        run: |
+          bash tests/test_shell_scripts.sh
+
+      - name: Test System Health Daemon (--once)
+        run: |
+          python3 daemon/syshealthd.py --once || true
+
+      - name: Test Socket Diagnostics Engine
+        run: |
+          python3 diagnostics/netdiag.py --sockets

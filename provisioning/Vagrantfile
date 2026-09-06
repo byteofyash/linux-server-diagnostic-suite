@@ -1,0 +1,66 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Base Box: Ubuntu 22.04 LTS (Jammy Jellyfish) Headless Server
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "srv-diagnostics-node1"
+
+  # Networking: Static host-only network for isolated diagnostic benchmarking
+  # Server IP: 192.168.56.10, Host machine can reach it via 192.168.56.1
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  # Port Forwarding for Host-to-Guest diagnostics
+  config.vm.network "forwarded_port", guest: 22, host: 2222, id: "ssh", auto_correct: true
+  config.vm.network "forwarded_port", guest: 5201, host: 5201, id: "iperf3" # iperf3 benchmark port
+  config.vm.network "forwarded_port", guest: 9100, host: 9100, id: "metrics" # optional health metrics port
+
+  # Hardware Allocation
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "ubuntu-server-diagnostic-node"
+    vb.memory = "2048"
+    vb.cpus = 2
+    # Ensure headless execution
+    vb.gui = false
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+  end
+
+  # Libvirt / KVM fallback provider
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.memory = 2048
+    libvirt.cpus = 2
+  end
+
+  # SSH Configuration: Enforce key-based authentication
+  config.ssh.insert_key = true
+  config.ssh.forward_agent = true
+
+  # Shared folder for project scripts
+  config.vm.synced_folder ".", "/opt/linux-server-diagnostic-suite",
+    owner: "vagrant",
+    group: "vagrant",
+    mount_options: ["dmode=755,fmode=755"]
+
+  # Provisioning Steps
+  config.vm.provision "shell", inline: <<-SHELL
+    set -euo pipefail
+    echo "=== [1/5] Updating Apt Repositories & Installing Essentials ==="
+    apt-get update -y
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      bash curl ufw iperf3 procps iproute2 net-tools cron logrotate python3 python3-pip
+
+    echo "=== [2/5] Running Network Setup & Static Routing ==="
+    bash /opt/linux-server-diagnostic-suite/provisioning/scripts/setup_network.sh
+
+    echo "=== [3/5] Applying UFW Firewall Rules ==="
+    bash /opt/linux-server-diagnostic-suite/provisioning/scripts/setup_ufw.sh
+
+    echo "=== [4/5] Hardening SSH Configuration ==="
+    bash /opt/linux-server-diagnostic-suite/provisioning/scripts/harden_ssh.sh
+
+    echo "=== [5/5] Installing Diagnostic Suite & Systemd Services ==="
+    bash /opt/linux-server-diagnostic-suite/install.sh --enable-daemon
+
+    echo "=== Provisioning Complete! Server ready at 192.168.56.10 ==="
+  SHELL
+end
