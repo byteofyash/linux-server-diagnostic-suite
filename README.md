@@ -1,6 +1,6 @@
 # Linux Server Administration & Network Diagnostic Suite
 
-[![CI Test Pipeline](https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square&logo=githubactions)](#)
+[![CI Test Pipeline](https://github.com/byteofyash/linux-server-diagnostic-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/byteofyash/linux-server-diagnostic-suite/actions)
 [![OS: Ubuntu Server](https://img.shields.io/badge/OS-Ubuntu%2022.04%20LTS-E95420?style=flat-square&logo=ubuntu)](#)
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)](#)
 [![Shell: Bash](https://img.shields.io/badge/Shell-Bash%204%2B-4EAA25?style=flat-square&logo=gnubash)](#)
@@ -104,7 +104,7 @@ graph TD
 ### Option A: Local Installation (Linux Server / VPS)
 ```bash
 # Clone the repository
-git clone https://github.com/yashranjan/linux-server-diagnostic-suite.git
+git clone https://github.com/byteofyash/linux-server-diagnostic-suite.git
 cd linux-server-diagnostic-suite
 
 # Install binaries, systemd service, logrotate, and cron tasks

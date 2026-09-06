@@ -1,6 +1,6 @@
 [Unit]
 Description=Linux System Health & Memory Leak Monitoring Daemon
-Documentation=https://github.com/yashranjan/linux-server-diagnostic-suite
+Documentation=https://github.com/byteofyash/linux-server-diagnostic-suite
 After=network.target network-online.target
 Wants=network-online.target
 
